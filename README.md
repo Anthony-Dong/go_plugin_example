@@ -177,6 +177,21 @@ github.com/tidwall/gjson -> t_xxxx/github.com/tidwall/gjson
 
 2. 废话不多说，就是下面那坨脚本了: [build.sh](plugin2/build.sh), 项目地址: [plugin2](./plugin2)
 
+```shell
+~ objdump -x   plugin2/output/plugin.so | grep 'github.com/tidwall/gjson'
+00000000001ad0c0 l     F .text	000000000000007e              local.t_1702492315/github.com/tidwall/gjson.Type.String
+00000000001ad140 l     F .text	00000000000001dd              local.t_1702492315/github.com/tidwall/gjson.Result.String
+00000000001ad320 l     F .text	00000000000001fd              local.t_1702492315/github.com/tidwall/gjson.Result.Bool
+00000000001ad520 l     F .text	0000000000000196              local.t_1702492315/github.com/tidwall/gjson.Result.Int
+00000000001ad6c0 l     F .text	0000000000000168              local.t_1702492315/github.com/tidwall/gjson.Result.Uint
+00000000001ad840 l     F .text	0000000000000125              local.t_1702492315/github.com/tidwall/gjson.Result.Float
+00000000001ad980 l     F .text	000000000000011d              local.t_1702492315/github.com/tidwall/gjson.Result.Time
+00000000001adaa0 l     F .text	00000000000002df              local.t_1702492315/github.com/tidwall/gjson.Result.Array
+00000000001add80 l     F .text	0000000000000055              local.t_1702492315/github.com/tidwall/gjson.Result.IsObject
+```
+
+可以发现包名被替换成了 `t_1702492315/github.com/tidwall/gjson` 
+
 3. 那么引入一个问题，例如都依赖于 gjson.Result 
 ```go
 import "github.com/tidwall/gjson"
