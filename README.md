@@ -208,7 +208,7 @@ gjson.Result 在插件中已经被我们替换了包名，实际上是 `t_xxxx/g
 因此在做数据交互的时候尽可能的使用 builtin type. 如果不满足自行做序列话！
 但是大部分插件都可以使用 `接口` 的方式避免此问题！
 
-# 最佳实践
+# 最佳实践 - HTTP Proxy插件
 
 1. 插件代码
 ```go
@@ -302,6 +302,98 @@ func main() {
 }
 ```
 
+# 最佳事件 - DataBus
+
+- [databus](./databus)  DataBus pkg
+- [databus_test](./databus_test) DataBus 加载插件+测试插件
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/anthony-dong/go_plugin_example/databus"
+	"github.com/anthony-dong/go_plugin_example/databus/model"
+	"os"
+	"plugin"
+)
+
+func LoadHandle(lib string) func(interface{}) error {
+	p, err := plugin.Open(lib)
+	if err != nil {
+		panic(err)
+	}
+	foo, err := p.Lookup("Handle")
+	if err != nil {
+		panic(err)
+	}
+	return foo.(func(interface{}) error)
+}
+
+func main() {
+	fmt.Println(os.Getpid())
+	lib := os.Args[1]
+	fmt.Println(lib)
+	// 创建 databus
+	bus := databus.NewHostDataBus()
+
+	data := model.Player{Id: databus.Ptr(int32(1)), Name: databus.Ptr("111")}
+	bus.Set("k1", &data)
+
+	// 加载插件并且调用
+	if err := LoadHandle(lib)(bus.GetDataBus()); err != nil {
+		panic(err)
+	}
+
+	// 处理完成数据加载数据
+	data2 := model.Player{}
+	if err := bus.Get("k1", &data2); err != nil {
+		panic(err)
+	}
+	fmt.Println(data2.String())
+}
+```
+- [plugin6](./plugin6) DataBus 插件 
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/anthony-dong/go_plugin_example/databus"
+	"github.com/anthony-dong/go_plugin_example/databus/model"
+)
+
+func Handle(_bus interface{}) error {
+	// 加载 databus (和宿主机是同一个 databus实例)
+	bus, err := databus.NewHostDataBusV2(_bus)
+	if err != nil {
+		return err
+	}
+	// 加载数据
+	data := model.Player{}
+	if err := bus.Get("k1", &data); err != nil {
+		return err
+	}
+	fmt.Println(data.String())
+
+	data.Name = databus.Ptr("plugin6")
+
+	// set 数据
+	bus.Set("k1", &data)
+	return nil
+}
+
+func main() {}
+```
+4. 测试
+
+```shell
+cd plugin6 && bash build.sh
+
+go run main.go ../plugin6/output/plugin.so
+```
+
 # 总结
 
 1. Go插件提供了很高的性能，但是会存在一个问题，隔离性的问题，导致插件隔离不恰当会出现程序挂掉的问题，比如插件内部代码panic了，且未抓取程序直接挂了，
@@ -310,3 +402,4 @@ func main() {
 4. 插件之间不应该直接依赖实体类型，例如`struct`等，推荐通过Go接口方式依赖，参考 [plugin3](./plugin3) 实现方式是比较好的做法，具体实现代码在 [http_plugin](./golang/http_plugin) 
 5. Go插件性能非常的高，Go调用Go插件，性能非常高，基本没有开销，非常适合于一些Go在线服务需要动态加载插件做一些较为复杂的业务逻辑，通常在网关等场景使用！
 6. Go插件如果导出 `C动态库/静态库` 被cpp/rust等语言调用的化性能非常的差，劣化较为严重，甚用！
+7. 两个例子基本上足够Cover住Go插件的日常使用了

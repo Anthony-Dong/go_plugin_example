@@ -1,0 +1,27 @@
+// proto2 file
+syntax = "proto2";
+
+package model;
+
+option go_package = "/model";
+
+message Player {
+  // in proto2, optional fields have explicit presence
+  optional string name = 1;
+  // proto2 still supports the problematic "required" field rule
+  required int32 id = 2;
+  // in proto2 this is not packed by default
+  repeated int32 scores = 3;
+
+  enum Handed {
+    HANDED_UNSPECIFIED = 0;
+    HANDED_LEFT = 1;
+    HANDED_RIGHT = 2;
+    HANDED_AMBIDEXTROUS = 3;
+  }
+
+  // in proto2 enums are closed
+  optional Handed handed = 4;
+
+  reserved "gender";
+}
