@@ -1,28 +1,31 @@
-# Go 插件
+********# Go 插件
 
 # Go 插件性能
 
 ## Go调用Go插件
-测试是 Go程序使用Go插件，执行`func Add(x,y int) int` 函数，测试代码在 [benchmark_test.go](golang/benchmark/benchmark_test.go)
+测试是 Go程序使用Go插件，执行`func Add(x,y int) int` 和 `JsonDecode(input []byte, v interface{}) error` 函数，测试代码在 [benchmark_test.go](golang/benchmark/benchmark_test.go)
 
 ```shell
-~ make golang_benchmark
-cd plugin && bash -e build.sh
-cd golang && CGO_ENABLED=1 go test -v -run=none -bench=Benchmark -count=2 -benchmem ./benchmark/...
 goos: linux
 goarch: amd64
 pkg: github.com/anthony-dong/cgo_demo/golang/benchmark
 cpu: Intel(R) Xeon(R) Platinum 8260 CPU @ 2.40GHz
-BenchmarkGoPlugin
-BenchmarkGoPlugin-8   	569536491	         2.010 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGoPlugin-8   	579598886	         2.037 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGoNative
-BenchmarkGoNative-8   	1000000000	         0.3624 ns/op	       0 B/op	       0 allocs/op
-BenchmarkGoNative-8   	1000000000	         0.3492 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAddGoPlugin
+BenchmarkAddGoPlugin-32           	715099152	         1.661 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAddGoPlugin-32           	723791640	         1.648 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAddGoNative
+BenchmarkAddGoNative-32           	727801614	         1.666 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAddGoNative-32           	725403765	         1.646 ns/op	       0 B/op	       0 allocs/op
+BenchmarkJsonDecodeGoPlugin
+BenchmarkJsonDecodeGoPlugin-32    	    2742	    408249 ns/op	   69502 B/op	    1700 allocs/op
+BenchmarkJsonDecodeGoPlugin-32    	    2916	    398226 ns/op	   69501 B/op	    1700 allocs/op
+BenchmarkJsonDecodeGoNative
+BenchmarkJsonDecodeGoNative-32    	    2881	    417631 ns/op	   69503 B/op	    1701 allocs/op
+BenchmarkJsonDecodeGoNative-32    	    2899	    401100 ns/op	   69501 B/op	    1700 allocs/op
 PASS
-ok  	github.com/anthony-dong/cgo_demo/golang/benchmark	3.550s
+ok  	github.com/anthony-dong/cgo_demo/golang/benchmark	10.313s
 ```
-结论就是非常给力 ！！！说实话这种函数调用的开销已经非常低了，Linux上也就是1ns左右(linux x86 && go1.18+)! 性能非常高! 损耗的原因还是动态库的损耗，都能接受！
+结论就是非常给力 ！！！没有任何调用开销！！！
 
 ## C调用Go插件(Cgo)
 
